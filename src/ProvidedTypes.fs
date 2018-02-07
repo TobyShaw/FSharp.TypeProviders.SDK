@@ -8509,7 +8509,7 @@ namespace ProviderImplementation.ProvidedTypes
           else
               fullName
 
-        let tryGetTypeFromAssembly toTgt (originalAssemblyName:string) fullName (asm:Assembly) =
+        let tryGetTypeFromAssembly (originalAssemblyName:string) fullName (asm:Assembly) =
             // if the original assembly of the type being replaced is in `assemblyReplacementMap`,
             // then we only map it to assemblies with a name specified in `assemblyReplacementMap`
             let restrictedAndMatching =
