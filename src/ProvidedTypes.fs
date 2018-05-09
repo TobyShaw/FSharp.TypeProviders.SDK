@@ -1649,7 +1649,7 @@ namespace ProviderImplementation.ProvidedTypes
                     match t with
                     | :? ProvidedTypeDefinition as pt -> pt
                     | _ ->
-                        let pt = ProvidedTypeDefinition("",None)
+                        let pt = ProvidedTypeDefinition("", None, isErased = true)
                         pt.SetExistingType t
                         pt
             else
