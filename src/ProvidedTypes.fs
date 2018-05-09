@@ -1352,6 +1352,9 @@ namespace ProviderImplementation.ProvidedTypes
             | Some _ -> true
             | None -> false
 
+        member __.SetExistingType t =
+            existingType <- Some t
+
         member this.ToType() =
             match existingType with
             | Some t -> t
@@ -1625,7 +1628,7 @@ namespace ProviderImplementation.ProvidedTypes
                 loop topTypes)
 
         /// Abstract a type to a parametric-type. Requires "formal parameters" and "instantiation function".
-        member __.DefineStaticParameters(parameters: ProvidedStaticParameter list, instantiationFunction: (string -> obj[] -> ProvidedTypeDefinition)) =
+        member __.DefineStaticParameters(parameters: ProvidedStaticParameter list, instantiationFunction: (string -> obj[] -> Type)) =
             if staticParamsDefined then failwithf "Static parameters have already been defined for this type. stacktrace = %A" Environment.StackTrace
             staticParamsDefined <- true
             staticParams      <- parameters
@@ -1647,7 +1650,7 @@ namespace ProviderImplementation.ProvidedTypes
                     | :? ProvidedTypeDefinition as pt -> pt
                     | _ ->
                         let pt = ProvidedTypeDefinition("",None)
-                        pt.existingType <- Some t
+                        pt.SetExistingType t
                         pt
             else
                 this
