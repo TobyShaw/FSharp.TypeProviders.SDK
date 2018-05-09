@@ -1247,6 +1247,7 @@ namespace ProviderImplementation.ProvidedTypes
         let mutable staticParamsDefined = false
         let mutable staticParams = staticParams
         let mutable staticParamsApply = staticParamsApply
+        let mutable existingType = None
         let mutable container = container
         let interfaceImpls = ResizeArray<Type>()
         let interfacesQueue = ResizeArray<unit -> Type[]>()
@@ -1345,6 +1346,16 @@ namespace ProviderImplementation.ProvidedTypes
             let hideObjectMethods = defaultArg hideObjectMethods false
             let attrs = defaultAttributes isErased
             ProvidedTypeDefinition(false, TypeContainer.TypeToBeDecided, className, K baseType, attrs, K None, [], None, None, K [| |], nonNullable, hideObjectMethods)
+
+        member __.IsExistingType =
+            match existingType with
+            | Some _ -> true
+            | None -> false
+
+        member this.ToType() =
+            match existingType with
+            | Some t -> t
+            | None -> this :> Type
 
         // state ops
 
@@ -1630,7 +1641,14 @@ namespace ProviderImplementation.ProvidedTypes
             if staticParams.Length > 0 then
                 match staticParamsApply with
                 | None -> failwith "ProvidedTypeDefinition: DefineStaticParameters was not called"
-                | Some f -> f name args
+                | Some f ->
+                    let t = f name args
+                    match t with
+                    | :? ProvidedTypeDefinition as pt -> pt
+                    | _ ->
+                        let pt = ProvidedTypeDefinition("",None)
+                        pt.existingType <- Some t
+                        pt
             else
                 this
 
@@ -14223,8 +14241,9 @@ namespace ProviderImplementation.ProvidedTypes
         // actually fully compiled and loaded as a reflection-load assembly before handing the type back to the API.
         let ensureCompiled (t: Type) =
             match t with
-            | :? ProvidedTypeDefinition as pt when pt.IsErased || pt.GetStaticParametersInternal().Length > 0 || not config.IsHostedExecution -> t
-            | _ ->
+            | :? ProvidedTypeDefinition as pt when pt.IsErased || pt.GetStaticParametersInternal().Length > 0 || not config.IsHostedExecution -> ()
+            | :? ProvidedTypeDefinition as pt when pt.IsExistingType -> ()
+            | _
                 let origAssembly = t.Assembly
 
                 // We expect the results reported by t.Assembly to actually change after this call, because the act of compilation
@@ -14247,14 +14266,13 @@ namespace ProviderImplementation.ProvidedTypes
                 if t.Assembly.GetType(tyName) = null then
                     failwithf "couldn't find type '%s' in assembly '%O'" tyName t.Assembly
 
-                t
-
 #else
-        let ensureCompiled (t: Type) = t
+        let ensureCompiled (t: Type) = ()
 #endif
 
         let makeProvidedNamespace (namespaceName:string) (typesSrc:ProvidedTypeDefinition list) =
             let typesSrc = [| for ty in typesSrc -> ty :> Type |]
+            let ensureCompiled x = ensureCompiled x; x
             let nsSrc =
                 { new IProvidedNamespace with
                     member __.GetNestedNamespaces() = [| |]
@@ -14399,8 +14417,9 @@ namespace ProviderImplementation.ProvidedTypes
                 let typePathAfterArguments = typePathAfterArguments.[typePathAfterArguments.Length-1]
                 match ty with
                 | :? ProvidedTypeDefinition as t ->
-                    let ty = (t.ApplyStaticArguments(typePathAfterArguments, objs) :> Type)
+                    let ty = t.ApplyStaticArguments(typePathAfterArguments, objs)
                     ensureCompiled ty
+                    ty.ToType()
 
                 | _ -> failwithf "ApplyStaticArguments: static params for type %s are unexpected, it is not a provided type definition. Please report this bug to https://github.com/fsprojects/FSharp.TypeProviders.SDK/issues" ty.FullName
 

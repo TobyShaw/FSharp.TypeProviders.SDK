@@ -334,7 +334,7 @@ namespace ProviderImplementation.ProvidedTypes
         member AddAssemblyTypesAsNestedTypesDelayed: assemblyFunction:(unit -> Assembly) -> unit
 
         /// Define the static parameters available on a statically parameterized type
-        member DefineStaticParameters: parameters: ProvidedStaticParameter list * instantiationFunction: (string -> obj[] -> ProvidedTypeDefinition) -> unit
+        member DefineStaticParameters: parameters: ProvidedStaticParameter list * instantiationFunction: (string -> obj[] -> Type) -> unit
 
         /// Add definition location information to the provided type definition.
         member AddDefinitionLocation: line:int * column:int * filePath:string -> unit
