@@ -8842,7 +8842,7 @@ namespace ProviderImplementation.ProvidedTypes
                                         x.StaticParams |> List.map convStaticParameterDefToTgt,
                                         x.StaticParamsApply |> Option.map (fun f s p ->
                                             let t = f s p
-                                            let tT = convProvidedTypeDefToTgt t
+                                            let tT = convTypeDefToTgt t
                                             tT),
                                         Some ((let mutable idx = 0 in fun () -> let vs, idx2 = x.GetMembersFromCursor(idx) in idx <- idx2; vs |> Array.map (convMemberDefToTgt xT)),
                                               (let mutable idx = 0 in fun () -> let vs, idx2 = x.GetInterfaceImplsFromCursor(idx) in idx <- idx2; vs |> Array.map convTypeToTgt),
