@@ -14243,7 +14243,7 @@ namespace ProviderImplementation.ProvidedTypes
             match t with
             | :? ProvidedTypeDefinition as pt when pt.IsErased || pt.GetStaticParametersInternal().Length > 0 || not config.IsHostedExecution -> ()
             | :? ProvidedTypeDefinition as pt when pt.IsExistingType -> ()
-            | _
+            | _ ->
                 let origAssembly = t.Assembly
 
                 // We expect the results reported by t.Assembly to actually change after this call, because the act of compilation
